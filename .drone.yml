@@ -1,0 +1,96 @@
+clone:
+  git:
+    image: plugins/git
+    depath: 50
+    tags: true
+
+workspace:
+  base: /local
+  path: /${DRONE_REPO}
+
+pipeline:
+  develop-lab:
+    image: appleboy/drone-ssh
+    host: 10.18.1.96
+    username: nsadmin
+    secrets:
+      - source: ssh_lab_feg
+        target: ssh_key
+    post: 22
+    command_timeout: 3600
+    script:
+      - cd /local/fantasy
+      - git pull origin develop
+      - composer install
+      - composer dump-autoload
+      - composer dump-autoload -o
+
+      - php artisan migrate
+
+      - php artisan clear-compiled
+      - php artisan optimize
+      - php artisan route:clear
+      - php artisan view:clear
+
+      - sudo php artisan cache:clear
+      - php artisan config:cache
+      - php artisan config:clear
+    when:
+      branch:
+        include: [develop]
+        exclude: [refs/tags/v*]
+# marked on 20211104
+#  ssh-bm-push:
+#    image: appleboy/drone-ssh
+#    host: 192.168.1.218
+#    username: root
+#    secrets:
+#      - source: ssh_localhost_pk218
+#        target: ssh_key
+#    port: 22
+#    command_timeout: 3600
+#    script:
+#      - cd /local/container/nbafantasy
+#      - pwd
+#      - make allfresh
+#
+#    when:
+#      event: [push]
+#      branch: [master]
+  ssh-bm:
+    image: appleboy/drone-ssh
+    host: 192.168.1.218
+    username: root
+    secrets:
+      - source: ssh_localhost_pk218
+        target: ssh_key
+    port: 22
+    command_timeout: 3600
+    script:
+      - cd /local/container/nbafantasy
+      - pwd
+      - make allfresh tag=${DRONE_TAG}
+
+    when:
+      event: [ tag ]
+      branch: [ refs/tags/v* ]
+
+#  steps:
+#    name: slack
+#    image: plugins/slack
+#    secrets: [slack_webhook]
+#    channel: nba-project-deployment
+#    when:
+#      status: [success, failure]
+#    template: >
+#      {{ repo.name }}
+#
+#      {{#success build.status}}✔{{ else }}✘{{/success}}{{ uppercasefirst build.status }}: Build #{{ build.number }}* (type: `{{ build.event }}`)
+#
+#      Commit: <http://10.18.1.209:10080/{{ repo.owner }}/{{ repo.name }}/commit/{{ build.commit }}|{{ truncate build.commit 8 }}>
+#
+#      Branch: <http://10.18.1.209:10080/{{ repo.owner }}/{{ repo.name }}/commits/{{ build.branch }}|{{ build.branch }}>
+#
+#      Author: {{ build.author }}
+#
+#      <{{ build.link }}|Visit build page ↗>
