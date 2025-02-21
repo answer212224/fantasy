@@ -1,62 +1,117 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Fantasy
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 簡介
+**Fantasy** 是一個基於 Laravel 開發的體育數據分析與管理系統，支援即時數據更新、用戶管理、球員統計等功能，適用於運動相關的數據應用場景。
 
-## About Laravel
+## 技術棧
+- **後端框架**: Laravel 10
+- **前端框架**: Vue.js 3 (可選)
+- **資料庫**: MySQL / PostgreSQL
+- **快取**: Redis
+- **API 認證**: Laravel Sanctum / JWT
+- **訊息佇列**: Laravel Queue
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 環境需求
+- PHP 8.1 以上
+- MySQL 8.0 以上
+- Redis（可選，用於快取）
+- Composer
+- Node.js 16+（若使用 Vue.js 前端）
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 安裝與設定
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Clone 專案
+```sh
+git clone https://github.com/answer212224/fantasy.git
+cd fantasy
+```
 
-## Learning Laravel
+### 2. 安裝 Laravel 依賴
+```sh
+composer install
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 3. 設定環境變數
+```sh
+cp .env.example .env
+php artisan key:generate
+```
+根據需求修改 `.env` 設定，如 `DB_CONNECTION`、`DB_HOST`、`DB_DATABASE` 等。
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 4. 設定資料庫
+```sh
+php artisan migrate --seed
+```
+這將建立資料庫結構並填充初始數據。
 
-## Laravel Sponsors
+### 5. 啟動開發伺服器
+```sh
+php artisan serve
+```
+伺服器將運行於 `http://127.0.0.1:8000`。
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+## API 使用方式
 
-### Premium Partners
+### 1. 取得 JWT Token
+**請求方式:** `POST /api/login`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
+**參數:**
+- `email`: 使用者帳號
+- `password`: 密碼
 
-## Contributing
+**回應:**
+```json
+{
+    "access_token": "your_token_here",
+    "token_type": "bearer",
+    "expires_in": 3600
+}
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. 取得球員數據
+**請求方式:** `GET /api/players`
 
-## Code of Conduct
+**請求標頭:**
+```sh
+Authorization: Bearer your_token_here
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**回應:**
+```json
+[
+    {
+        "id": 1,
+        "name": "LeBron James",
+        "team": "Lakers",
+        "points": 27.5,
+        "rebounds": 8.3,
+        "assists": 7.2
+    },
+    ...
+]
+```
 
-## Security Vulnerabilities
+## 測試
+執行 PHPUnit 測試：
+```sh
+php artisan test
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 部署
+1. 設定 `.env` 並執行：
+   ```sh
+   php artisan config:cache
+   php artisan migrate --force
+   ```
+2. 使用 `supervisor` 管理 Laravel Queue（若有使用）：
+   ```sh
+   php artisan queue:work
+   ```
+3. 部署至 Nginx / Apache，確保 `public/` 目錄作為 Web 入口。
 
-## License
+## 貢獻方式
+- 提交 PR 時請遵循 Laravel 代碼規範與最佳實踐。
+- 任何錯誤或建議請提交 Issue。
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 授權
+本專案基於 **MIT License** 發布。
